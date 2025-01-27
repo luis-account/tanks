@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "server.ts",
   "scripts": {
+    "build": "tsc",
     "start": "nodemon --config nodemon.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
