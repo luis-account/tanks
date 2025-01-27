@@ -24,6 +24,10 @@ class Player {
         context.fillStyle = this.color;
         context.fillRect(this.x, this.y, this.size, this.size);
     }
+
+    destroy(context: CanvasRenderingContext2D) {
+        context.clearRect(this.x, this.y, this.size, this.size);
+    }
 }
 
 export default Player;

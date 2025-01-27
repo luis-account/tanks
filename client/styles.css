@@ -10,8 +10,19 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 canvas {
     border: 1px solid black;
+}
+
+#version {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin: 10px;
+    font-size: 12px;
+    color: #333;
 }

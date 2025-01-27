@@ -17,6 +17,16 @@ export function createGame(socket: Socket) {
         });
     });
 
+    socket.on('playerDisconnected', (id: string) => {
+        console.log('Client received: Player disconnected:', id);
+        
+        if (!context) {
+            throw new Error('Cannot remove player because canvas context does not exist');
+        }
+        players[id].destroy(context);
+        delete players[id];
+    });
+
     socket.on('newPlayer', (playerData: any) => {
         players[playerData.id] = new Player(
             playerData.position.x,
