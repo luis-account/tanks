@@ -5,6 +5,7 @@ import cors from 'cors';
 import Player from './entity/player';
 import { Direction } from './types';
 import { calculateNewPosition } from './movement';
+import { log } from 'console';
 
 const app = express();
 app.use(cors({ origin: '*' }));
@@ -55,6 +56,20 @@ io.on('connection', (socket) => {
                 id: socket.id,
                 x: player.x,
                 y: player.y
+            });
+        }
+    });
+
+    socket.on('shoot', (shootData: { x: number, y: number }) => {
+        log('Player shot:', socket.id, shootData);
+        const player = players[socket.id];
+        if (player) {
+            io.emit('playerShot', {
+                id: socket.id,
+                x: player.x + 10,
+                y: player.y + 10,
+                targetX: shootData.x,
+                targetY: shootData.y
             });
         }
     });

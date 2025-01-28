@@ -10,11 +10,16 @@ export function createGame(socket: Socket) {
     canvas.height = 600;
 
     const players: { [id: string]: Player } = {};
+    const shots: { id: string, x: number, y: number, targetX: number, targetY: number }[] = [];
 
     socket.on('currentPlayers', (currentPlayers: PlayerData[]) => {
         currentPlayers.forEach((playerData) => {
             players[playerData.id] = new Player(playerData.x, playerData.y, playerData.color);
         });
+    });
+
+    socket.on('playerShot', (shotData: { id: string, x: number, y: number, targetX: number, targetY: number }) => {
+        shots.push(shotData);
     });
 
     socket.on('playerDisconnected', (id: string) => {
@@ -48,9 +53,35 @@ export function createGame(socket: Socket) {
             Object.values(players).forEach((player) => {
                 player.draw(context);
             });
+            shots.forEach((shot, index) => {
+                context.beginPath();
+                context.arc(shot.x, shot.y, 5, 0, 2 * Math.PI);
+                context.fillStyle = 'red';
+                context.fill();
+                // Move the shot towards the target
+                const dx = shot.targetX - shot.x;
+                const dy = shot.targetY - shot.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const speed = 5;
+                if (distance > speed) {
+                    shot.x += (dx / distance) * speed;
+                    shot.y += (dy / distance) * speed;
+                } else {
+                    shots.splice(index, 1); // Remove the shot if it reaches the target
+                }
+            });
         }
         requestAnimationFrame(gameLoop);
     }
+
+    canvas.addEventListener('mousedown', (event) => {
+        if (event.button === 0) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            socket.emit('shoot', { x, y });
+        }
+    });
 
     window.addEventListener('keydown', (event) => {
         switch (event.key) {
