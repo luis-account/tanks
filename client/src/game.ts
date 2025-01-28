@@ -13,13 +13,13 @@ export function createGame(socket: Socket) {
 
     socket.on('currentPlayers', (currentPlayers: PlayerData[]) => {
         currentPlayers.forEach((playerData) => {
-            players[playerData.id] = new Player(playerData.x, playerData.y);
+            players[playerData.id] = new Player(playerData.x, playerData.y, playerData.color);
         });
     });
 
     socket.on('playerDisconnected', (id: string) => {
         console.log('Client received: Player disconnected:', id);
-        
+
         if (!context) {
             throw new Error('Cannot remove player because canvas context does not exist');
         }
@@ -27,10 +27,11 @@ export function createGame(socket: Socket) {
         delete players[id];
     });
 
-    socket.on('newPlayer', (playerData: any) => {
+    socket.on('newPlayer', (playerData: PlayerData) => {
         players[playerData.id] = new Player(
-            playerData.position.x,
-            playerData.position.y
+            playerData.x,
+            playerData.y,
+            playerData.color
         );
     });
 
@@ -52,22 +53,20 @@ export function createGame(socket: Socket) {
     }
 
     window.addEventListener('keydown', (event) => {
-        const player = players[socket.id!];
         switch (event.key) {
             case 'ArrowUp':
-                player.move(0, -5);
+                socket.emit('playerMovement', { direction: 'up' });
                 break;
             case 'ArrowDown':
-                player.move(0, 5);
+                socket.emit('playerMovement', { direction: 'down' });
                 break;
             case 'ArrowLeft':
-                player.move(-5, 0);
+                socket.emit('playerMovement', { direction: 'left' });
                 break;
             case 'ArrowRight':
-                player.move(5, 0);
+                socket.emit('playerMovement', { direction: 'right' });
                 break;
         }
-        socket.emit('playerMovement', { x: player.x, y: player.y });
     });
 
     gameLoop();

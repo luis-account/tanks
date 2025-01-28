@@ -4,11 +4,11 @@ class Player {
     size: number;
     color: string;
 
-    constructor(x: number, y: number, size: number = 20) {
+    constructor(x: number, y: number, color: string = '#000000', size: number = 20) {
         this.x = x;
         this.y = y;
         this.size = size;
-        this.color = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+        this.color = color;
     }
 
     move(dx: number, dy: number) {

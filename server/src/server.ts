@@ -2,6 +2,9 @@ import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import Player from './entity/player';
+import { Direction } from './types';
+import { calculateNewPosition } from './movement';
 
 const app = express();
 app.use(cors({ origin: '*' }));
@@ -14,34 +17,44 @@ const io = new Server(server, {
     },
 });
 
-const players: { [id: string]: { x: number; y: number } } = {};
+const players: { [id: string]: Player } = {};
 
 app.use(express.static('public'));
 
 io.on('connection', (socket) => {
     console.log('A player connected:', socket.id);
 
-    players[socket.id] = { x: 100, y: 100 }; // Initial position
+    players[socket.id] = new Player(100, 100);
 
     socket.emit(
         'currentPlayers',
-        Object.entries(players).map(([id, position]) => ({
+        Object.entries(players).map(([id, player]) => ({
             id,
-            x: position.x,
-            y: position.y
+            x: player.x,
+            y: player.y,
+            color: player.color
         }))
     );
 
-    socket.broadcast.emit('newPlayer', { id: socket.id, position: players[socket.id] });
+    socket.broadcast.emit('newPlayer', {
+        id: socket.id,
+        x: players[socket.id].x,
+        y: players[socket.id].y,
+        color: players[socket.id].color
+    });
 
-    socket.on('playerMovement', (movementData) => {
-        if (players[socket.id]) {
-            players[socket.id].x = movementData.x;
-            players[socket.id].y = movementData.y;
-            socket.broadcast.emit('playerMoved', {
+    socket.on('playerMovement', (newMovementDirection: {direction: Direction}) => {
+        const player = players[socket.id];
+        if (player) {
+            const {newPosition, newMovementData} = calculateNewPosition(player, newMovementDirection.direction);
+            player.x = newPosition.x;
+            player.y = newPosition.y;
+            player.movementData = newMovementData;
+
+            io.emit('playerMoved', {
                 id: socket.id,
-                x: players[socket.id].x,
-                y: players[socket.id].y
+                x: player.x,
+                y: player.y
             });
         }
     });
