@@ -6,8 +6,17 @@
     <link rel="stylesheet" href="./styles.css">
     <title>Tanks</title>
 </head>
-<body>
-    <span id="version">pre-alpha 0.0.2</span>
-    <script src="dist/app.js"></script>
+<body class="m-0 p-0 w-screen h-screen overflow-hidden flex-col justify-center items-center font-sans">
+    <div id="content">
+        <div class="min-w-full flex flex-row justify-between">
+            <div id="player-form" class="mb-3 flex flex-row">
+                <input id="username-input" type="text" name="username" placeholder="Username" class="mr-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                <input id="color-input" type="color" class="mr-2 p-1 h-10 w-14 block bg-white border border-gray-200 cursor-pointer rounded disabled:opacity-50 disabled:pointer-events-none" value="#2563eb" title="Choose your color">
+                <button id="player-submit" type="submit" class="bg-gray-50 hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-300 cursor-pointer rounded-lg">Join</button>
+            </div>
+        </div>
+    </div>
+    <span class="absolute bottom-0 right-0 m-2 text-xs text-gray-400">pre-alpha 0.0.3</span>
+    <script type="module" src="src/app.ts"></script>
 </body>
 </html>

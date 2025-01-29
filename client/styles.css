@@ -1,4 +1,7 @@
+@import "tailwindcss";
+
 body {
+    position: relative;
     margin: 0;
     padding: 0;
     left: 0;
@@ -18,11 +21,11 @@ canvas {
     border: 1px solid black;
 }
 
-#version {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    margin: 10px;
-    font-size: 12px;
-    color: #333;
+#container {
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

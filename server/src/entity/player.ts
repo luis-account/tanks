@@ -1,15 +1,17 @@
 import { MovementData } from "../types";
 
 class Player {
+    username: string;
     x: number;
     y: number;
     color: string;
     movementData: MovementData;
 
-    constructor(x: number, y: number) {
+    constructor(x: number, y: number, username: string, color: string) {
         this.x = x;
         this.y = y;
-        this.color = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+        this.color = color;
+        this.username = username;
         this.movementData = { direction: 'right', speed: 0 };
     }
 }

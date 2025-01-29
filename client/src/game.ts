@@ -2,15 +2,22 @@ import Player from './player';
 import { PlayerData } from './types';
 import { Socket } from 'socket.io-client';
 
-export function createGame(socket: Socket) {
+export function createGame(socket: Socket, username: string, color: string) {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    document.body.appendChild(canvas);
-    canvas.width = 800;
-    canvas.height = 600;
+    const content = document.getElementById('content');
+    if (content) {
+        content.appendChild(canvas);
+    } else {
+        throw new Error('Content element not found');
+    }
+    canvas.width = 1100;
+    canvas.height = 700;
 
     const players: { [id: string]: Player } = {};
     const shots: { id: string, x: number, y: number, targetX: number, targetY: number }[] = [];
+
+    socket.emit('registerPlayer', { username: username, color: color });
 
     socket.on('currentPlayers', (currentPlayers: PlayerData[]) => {
         currentPlayers.forEach((playerData) => {
@@ -32,14 +39,6 @@ export function createGame(socket: Socket) {
         delete players[id];
     });
 
-    socket.on('newPlayer', (playerData: PlayerData) => {
-        players[playerData.id] = new Player(
-            playerData.x,
-            playerData.y,
-            playerData.color
-        );
-    });
-
     socket.on('playerMoved', (playerData: PlayerData) => {
         if (players[playerData.id]) {
             players[playerData.id].x = playerData.x;
@@ -56,7 +55,7 @@ export function createGame(socket: Socket) {
             shots.forEach((shot, index) => {
                 context.beginPath();
                 context.arc(shot.x, shot.y, 5, 0, 2 * Math.PI);
-                context.fillStyle = 'red';
+                context.fillStyle = 'black';
                 context.fill();
                 // Move the shot towards the target
                 const dx = shot.targetX - shot.x;

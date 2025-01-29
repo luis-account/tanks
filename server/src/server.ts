@@ -25,8 +25,6 @@ app.use(express.static('public'));
 io.on('connection', (socket) => {
     console.log('A player connected:', socket.id);
 
-    players[socket.id] = new Player(100, 100);
-
     socket.emit(
         'currentPlayers',
         Object.entries(players).map(([id, player]) => ({
@@ -37,11 +35,17 @@ io.on('connection', (socket) => {
         }))
     );
 
-    socket.broadcast.emit('newPlayer', {
-        id: socket.id,
-        x: players[socket.id].x,
-        y: players[socket.id].y,
-        color: players[socket.id].color
+    socket.on('registerPlayer', (playerData: { username: string, color: string }) => {
+        players[socket.id] = new Player(100, 100, playerData.username, playerData.color);
+        socket.emit(
+            'currentPlayers',
+            Object.entries(players).map(([id, player]) => ({
+                id,
+                x: player.x,
+                y: player.y,
+                color: player.color
+            }))
+        );
     });
 
     socket.on('playerMovement', (newMovementDirection: {direction: Direction}) => {
