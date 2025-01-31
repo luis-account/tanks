@@ -9,3 +9,13 @@ export interface Position {
     x: number,
     y: number
 }
+
+export interface Shot {
+    uuid: string;
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    id: string;
+    hasBounced: boolean;
+}

@@ -1,5 +1,5 @@
 import Player from './player';
-import { Direction, PlayerData } from './types';
+import { Direction, PlayerData, Shot } from './types';
 import { Socket } from 'socket.io-client';
 
 export function createGame(socket: Socket, username: string, color: string) {
@@ -15,16 +15,7 @@ export function createGame(socket: Socket, username: string, color: string) {
     canvas.height = 700;
 
     const players: { [id: string]: Player } = {};
-    const shots: {
-        id: string,
-        x: number,
-        y: number,
-        targetX: number,
-        targetY: number,
-        velocityX: number,
-        velocityY: number,
-        hasBounced: boolean
-    }[] = [];
+    let shots: Shot[] = [];
 
     socket.emit('registerPlayer', { username: username, color: color });
 
@@ -66,21 +57,6 @@ export function createGame(socket: Socket, username: string, color: string) {
         refreshPlayerList(players);
     });
 
-    socket.on('playerShot', (shotData: { id: string, x: number, y: number, targetX: number, targetY: number }) => {
-        const dx = shotData.targetX - shotData.x;
-        const dy = shotData.targetY - shotData.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const velocityX = (dx / distance) * 5; // Adjust speed as needed
-        const velocityY = (dy / distance) * 5; // Adjust speed as needed
-
-        shots.push({
-            ...shotData,
-            velocityX,
-            velocityY,
-            hasBounced: false
-        });
-    });
-
     socket.on('playerDisconnected', (id: string) => {
         console.log('Client received: Player disconnected:', id);
 
@@ -89,6 +65,7 @@ export function createGame(socket: Socket, username: string, color: string) {
         }
         players[id].destroy(context);
         delete players[id];
+        refreshPlayerList(players);
     });
 
     socket.on('playerMoved', (playerData: PlayerData) => {
@@ -98,43 +75,33 @@ export function createGame(socket: Socket, username: string, color: string) {
         }
     });
 
+    socket.on('playerHit', (hitData: {hitId: string, shooterId: string}) => {
+        if (players[hitData.hitId] && context) {
+            players[hitData.hitId].destroy(context);
+            delete players[hitData.hitId];
+            refreshPlayerList(players);
+        }
+    });
+
+    socket.on('shotsUpdated', (updatedShots: { uuid: string, id: string, x: number, y: number }[]) => {
+        shots = updatedShots.map((shot) => ({ x: shot.x, y: shot.y, color: players[shot.id]?.color || 'red'}));
+    });
+
     function gameLoop() {
         if (context) {
             context.clearRect(0, 0, canvas.width, canvas.height);
             Object.values(players).forEach((player) => {
                 player.draw(context);
             });
-
-            shots.forEach((shot, index) => {
-                // Update shot position
-                shot.x += shot.velocityX;
-                shot.y += shot.velocityY;
-
-                // Draw the shot
-                const player = players[shot.id];
-                context.fillStyle = player ? player.color : 'red'; // Use player's color or default to red
+            
+            shots.forEach((shot) => {
+                context.fillStyle = shot.color;
                 context.beginPath();
-                context.arc(shot.x, shot.y, 5, 0, Math.PI * 2); // Adjust size as needed
+                context.arc(shot.x, shot.y, 5, 0, Math.PI * 2);
                 context.fill();
-
-                // Check for collision with walls
-                if (shot.x <= 0 || shot.x >= canvas.width || shot.y <= 0 || shot.y >= canvas.height) {
-                    if (shot.hasBounced) {
-                        // Remove the shot if it has already bounced once
-                        shots.splice(index, 1);
-                    } else {
-                        // Bounce the shot
-                        if (shot.x <= 0 || shot.x >= canvas.width) {
-                            shot.velocityX *= -1;
-                        }
-                        if (shot.y <= 0 || shot.y >= canvas.height) {
-                            shot.velocityY *= -1;
-                        }
-                        shot.hasBounced = true;
-                    }
-                }
             });
         }
+
         requestAnimationFrame(gameLoop);
     }
 
@@ -145,13 +112,28 @@ export function createGame(socket: Socket, username: string, color: string) {
             const currentTime = Date.now();
             if (currentTime - lastShotTime >= shotCooldownMilliseconds) {
                 const rect = canvas.getBoundingClientRect();
-                const x = event.clientX - rect.left;
-                const y = event.clientY - rect.top;
-                socket.emit('shoot', { x, y });
+                const clickX = event.clientX - rect.left;
+                const clickY = event.clientY - rect.top;
+                const playerId = socket.id;
+                if (!playerId) return;
+                const player = players[playerId];
+    
+                if (!player) return;
+    
+                const dx = clickX - player.x;
+                const dy = clickY - player.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+    
+                socket.emit('shoot', {
+                    x: (dx / length),
+                    y: (dy / length)
+                });
+    
                 lastShotTime = currentTime;
             }
         }
     });
+    
 
     let currentDirection: Direction | null = null;
     let lastInputTime = 0;
