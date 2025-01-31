@@ -16,6 +16,15 @@ export function createGame(socket: Socket, username: string, color: string) {
 
     const players: { [id: string]: Player } = {};
     let shots: Shot[] = [];
+    let walls: { x: number, y: number, width: number, height: number }[] = [];
+
+    document.getElementById('revive')?.addEventListener('click', () => {
+        const reviveButton = document.getElementById('revive');
+        if (reviveButton) {
+            reviveButton.style.display = 'none';
+        }
+        socket.emit('registerPlayer', { username: username, color: color });
+    });
 
     socket.emit('registerPlayer', { username: username, color: color });
 
@@ -32,7 +41,7 @@ export function createGame(socket: Socket, username: string, color: string) {
             playerList.innerHTML = '';
             Object.values(players).forEach((player) => {
                 console.log(player);
-                
+
                 const playerEntry = document.createElement('div');
                 playerEntry.className = 'flex items-center mb-2 mr-8';
 
@@ -52,7 +61,7 @@ export function createGame(socket: Socket, username: string, color: string) {
 
     socket.on('newPlayer', (playerData: PlayerData) => {
         console.log('Client received: New player:', playerData);
-        
+
         players[playerData.id] = new Player(playerData.username, playerData.x, playerData.y, playerData.color);
         refreshPlayerList(players);
     });
@@ -68,6 +77,10 @@ export function createGame(socket: Socket, username: string, color: string) {
         refreshPlayerList(players);
     });
 
+    socket.on('walls', (serverWalls: { x: number, y: number, width: number, height: number }[]) => {
+        walls = serverWalls;
+    });
+
     socket.on('playerMoved', (playerData: PlayerData) => {
         if (players[playerData.id]) {
             players[playerData.id].x = playerData.x;
@@ -75,16 +88,23 @@ export function createGame(socket: Socket, username: string, color: string) {
         }
     });
 
-    socket.on('playerHit', (hitData: {hitId: string, shooterId: string}) => {
+    socket.on('playerHit', (hitData: { hitId: string, shooterId: string }) => {
         if (players[hitData.hitId] && context) {
             players[hitData.hitId].destroy(context);
             delete players[hitData.hitId];
             refreshPlayerList(players);
+
+            if (hitData.hitId === socket.id) {
+                const playerRejoin = document.getElementById('revive');
+                if (playerRejoin) {
+                    playerRejoin.style.display = 'block';
+                }
+            }
         }
     });
 
     socket.on('shotsUpdated', (updatedShots: { uuid: string, id: string, x: number, y: number }[]) => {
-        shots = updatedShots.map((shot) => ({ x: shot.x, y: shot.y, color: players[shot.id]?.color || 'red'}));
+        shots = updatedShots.map((shot) => ({ x: shot.x, y: shot.y, color: players[shot.id]?.color || 'red' }));
     });
 
     function gameLoop() {
@@ -93,12 +113,17 @@ export function createGame(socket: Socket, username: string, color: string) {
             Object.values(players).forEach((player) => {
                 player.draw(context);
             });
-            
+
             shots.forEach((shot) => {
                 context.fillStyle = shot.color;
                 context.beginPath();
                 context.arc(shot.x, shot.y, 5, 0, Math.PI * 2);
                 context.fill();
+            });
+
+            walls.forEach((wall) => {
+                context.fillStyle = '#000000';
+                context.fillRect(wall.x, wall.y, wall.width, wall.height);
             });
         }
 
@@ -117,23 +142,23 @@ export function createGame(socket: Socket, username: string, color: string) {
                 const playerId = socket.id;
                 if (!playerId) return;
                 const player = players[playerId];
-    
+
                 if (!player) return;
-    
+
                 const dx = clickX - player.x;
                 const dy = clickY - player.y;
                 const length = Math.sqrt(dx * dx + dy * dy);
-    
+
                 socket.emit('shoot', {
                     x: (dx / length),
                     y: (dy / length)
                 });
-    
+
                 lastShotTime = currentTime;
             }
         }
     });
-    
+
 
     let currentDirection: Direction | null = null;
     let lastInputTime = 0;
