@@ -30,12 +30,40 @@ export function createGame(socket: Socket, username: string, color: string) {
 
     socket.on('currentPlayers', (currentPlayers: PlayerData[]) => {
         currentPlayers.forEach((playerData) => {
-            players[playerData.id] = new Player(playerData.x, playerData.y, playerData.color);
+            players[playerData.id] = new Player(playerData.username, playerData.x, playerData.y, playerData.color);
         });
+        refreshPlayerList(players);
     });
 
+    function refreshPlayerList(players: { [id: string]: Player }) {
+        const playerList = document.getElementById('player-list');
+        if (playerList) {
+            playerList.innerHTML = '';
+            Object.values(players).forEach((player) => {
+                console.log(player);
+                
+                const playerEntry = document.createElement('div');
+                playerEntry.className = 'flex items-center mb-2 mr-8';
+
+                const colorSquare = document.createElement('div');
+                colorSquare.className = 'w-4 h-4 mr-1';
+                colorSquare.style.backgroundColor = player.color;
+
+                const playerName = document.createElement('span');
+                playerName.textContent = player.username;
+
+                playerEntry.appendChild(colorSquare);
+                playerEntry.appendChild(playerName);
+                playerList.appendChild(playerEntry);
+            });
+        }
+    }
+
     socket.on('newPlayer', (playerData: PlayerData) => {
-        players[playerData.id] = new Player(playerData.x, playerData.y, playerData.color);
+        console.log('Client received: New player:', playerData);
+        
+        players[playerData.id] = new Player(playerData.username, playerData.x, playerData.y, playerData.color);
+        refreshPlayerList(players);
     });
 
     socket.on('playerShot', (shotData: { id: string, x: number, y: number, targetX: number, targetY: number }) => {

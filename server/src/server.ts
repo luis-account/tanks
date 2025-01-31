@@ -31,6 +31,7 @@ io.on('connection', (socket) => {
         'currentPlayers',
         Object.entries(players).map(([id, player]) => ({
             id,
+            username: player.username,
             x: player.x,
             y: player.y,
             color: player.color
@@ -43,6 +44,7 @@ io.on('connection', (socket) => {
             'currentPlayers',
             Object.entries(players).map(([id, player]) => ({
                 id,
+                username: player.username,
                 x: player.x,
                 y: player.y,
                 color: player.color
@@ -50,6 +52,7 @@ io.on('connection', (socket) => {
         );
         socket.broadcast.emit('newPlayer', {
             id: socket.id,
+            username: players[socket.id].username,
             x: players[socket.id].x,
             y: players[socket.id].y,
             color: players[socket.id].color

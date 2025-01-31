@@ -1,5 +1,6 @@
 export interface PlayerData {
     id: string;
+    username: string;
     x: number;
     y: number;
     color: string;

@@ -1,10 +1,12 @@
 class Player {
+    username: string;
     x: number;
     y: number;
     size: number;
     color: string;
 
-    constructor(x: number, y: number, color: string = '#000000', size: number = 20) {
+    constructor(username: string, x: number, y: number, color: string = '#000000', size: number = 20) {
+        this.username = username;
         this.x = x;
         this.y = y;
         this.size = size;
