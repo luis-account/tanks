@@ -19,6 +19,8 @@ const io = new Server(server, {
 });
 
 const players: { [id: string]: Player } = {};
+const inputCooldownMilliseconds = 100;
+const lastInputTimes: { [id: string]: number } = {};
 
 app.use(express.static('public'));
 
@@ -48,10 +50,15 @@ io.on('connection', (socket) => {
         );
     });
 
-    socket.on('playerMovement', (newMovementDirection: {direction: Direction}) => {
+    socket.on('playerMovement', (newMovementDirection: { direction: Direction }) => {
+        const currentTime = Date.now();
+        if (currentTime - (lastInputTimes[socket.id] || 0) < inputCooldownMilliseconds) {
+            return;
+        }
+
         const player = players[socket.id];
         if (player) {
-            const {newPosition, newMovementData} = calculateNewPosition(player, newMovementDirection.direction);
+            const { newPosition, newMovementData } = calculateNewPosition(player, newMovementDirection.direction);
             player.x = newPosition.x;
             player.y = newPosition.y;
             player.movementData = newMovementData;
@@ -61,6 +68,8 @@ io.on('connection', (socket) => {
                 x: player.x,
                 y: player.y
             });
+
+            lastInputTimes[socket.id] = currentTime;
         }
     });
 

@@ -1,5 +1,5 @@
 import Player from './player';
-import { PlayerData } from './types';
+import { Direction, PlayerData } from './types';
 import { Socket } from 'socket.io-client';
 
 export function createGame(socket: Socket, username: string, color: string) {
@@ -120,23 +120,72 @@ export function createGame(socket: Socket, username: string, color: string) {
         }
     });
 
+    let currentDirection: Direction | null = null;
+    let lastInputTime = 0;
+    const inputCooldownMilliseconds = 100;
+    let movementInterval: NodeJS.Timeout | null = null;
+
+    const startMovement = (direction: Direction) => {
+        if (movementInterval) {
+            clearInterval(movementInterval);
+        }
+        movementInterval = setInterval(() => {
+            const currentTime = Date.now();
+            if (currentTime - lastInputTime >= inputCooldownMilliseconds) {
+                socket.emit('playerMovement', { direction });
+                lastInputTime = currentTime;
+            }
+        }, inputCooldownMilliseconds);
+    };
+
     window.addEventListener('keydown', (event) => {
         switch (event.key) {
             case 'ArrowUp':
             case 'w':
-                socket.emit('playerMovement', { direction: 'up' });
+                if (currentDirection !== 'up') {
+                    currentDirection = 'up';
+                    startMovement('up');
+                }
                 break;
             case 'ArrowDown':
             case 's':
-                socket.emit('playerMovement', { direction: 'down' });
+                if (currentDirection !== 'down') {
+                    currentDirection = 'down';
+                    startMovement('down');
+                }
                 break;
             case 'ArrowLeft':
             case 'a':
-                socket.emit('playerMovement', { direction: 'left' });
+                if (currentDirection !== 'left') {
+                    currentDirection = 'left';
+                    startMovement('left');
+                }
                 break;
             case 'ArrowRight':
             case 'd':
-                socket.emit('playerMovement', { direction: 'right' });
+                if (currentDirection !== 'right') {
+                    currentDirection = 'right';
+                    startMovement('right');
+                }
+                break;
+        }
+    });
+
+    window.addEventListener('keyup', (event) => {
+        switch (event.key) {
+            case 'ArrowUp':
+            case 'w':
+            case 'ArrowDown':
+            case 's':
+            case 'ArrowLeft':
+            case 'a':
+            case 'ArrowRight':
+            case 'd':
+                currentDirection = null;
+                if (movementInterval) {
+                    clearInterval(movementInterval);
+                    movementInterval = null;
+                }
                 break;
         }
     });

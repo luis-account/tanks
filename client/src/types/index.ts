@@ -8,3 +8,5 @@ export interface PlayerData {
 export interface GameState {
     players: PlayerData[];
 }
+
+export type Direction = 'up' | 'down' | 'left' | 'right';
