@@ -48,6 +48,12 @@ io.on('connection', (socket) => {
                 color: player.color
             }))
         );
+        socket.broadcast.emit('newPlayer', {
+            id: socket.id,
+            x: players[socket.id].x,
+            y: players[socket.id].y,
+            color: players[socket.id].color
+        });
     });
 
     socket.on('playerMovement', (newMovementDirection: { direction: Direction }) => {

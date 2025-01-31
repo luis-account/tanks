@@ -34,6 +34,10 @@ export function createGame(socket: Socket, username: string, color: string) {
         });
     });
 
+    socket.on('newPlayer', (playerData: PlayerData) => {
+        players[playerData.id] = new Player(playerData.x, playerData.y, playerData.color);
+    });
+
     socket.on('playerShot', (shotData: { id: string, x: number, y: number, targetX: number, targetY: number }) => {
         const dx = shotData.targetX - shotData.x;
         const dy = shotData.targetY - shotData.y;
@@ -79,7 +83,8 @@ export function createGame(socket: Socket, username: string, color: string) {
                 shot.y += shot.velocityY;
 
                 // Draw the shot
-                context.fillStyle = 'red'; // Adjust color as needed
+                const player = players[shot.id];
+                context.fillStyle = player ? player.color : 'red'; // Use player's color or default to red
                 context.beginPath();
                 context.arc(shot.x, shot.y, 5, 0, Math.PI * 2); // Adjust size as needed
                 context.fill();
