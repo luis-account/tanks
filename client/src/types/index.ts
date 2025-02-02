@@ -17,3 +17,10 @@ export interface Shot {
     y: number;
     color: string;
 }
+
+export interface Wall {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}

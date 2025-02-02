@@ -1,18 +1,10 @@
+import { Board } from './board';
 import Player from './player';
 import { Direction, PlayerData, Shot } from './types';
 import { Socket } from 'socket.io-client';
 
 export function createGame(socket: Socket, username: string, color: string) {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    const content = document.getElementById('content');
-    if (content) {
-        content.appendChild(canvas);
-    } else {
-        throw new Error('Content element not found');
-    }
-    canvas.width = 1100;
-    canvas.height = 700;
+    const board = new Board(document.getElementById('content')!);
 
     const players: { [id: string]: Player } = {};
     let shots: Shot[] = [];
@@ -69,10 +61,10 @@ export function createGame(socket: Socket, username: string, color: string) {
     socket.on('playerDisconnected', (id: string) => {
         console.log('Client received: Player disconnected:', id);
 
-        if (!context) {
+        if (!board.getContext()) {
             throw new Error('Cannot remove player because canvas context does not exist');
         }
-        players[id].destroy(context);
+        players[id].destroy(board.getContext());
         delete players[id];
         refreshPlayerList(players);
     });
@@ -89,8 +81,8 @@ export function createGame(socket: Socket, username: string, color: string) {
     });
 
     socket.on('playerHit', (hitData: { hitId: string, shooterId: string }) => {
-        if (players[hitData.hitId] && context) {
-            players[hitData.hitId].destroy(context);
+        if (players[hitData.hitId] && board.getContext()) {
+            players[hitData.hitId].destroy(board.getContext());
             delete players[hitData.hitId];
             refreshPlayerList(players);
 
@@ -108,35 +100,17 @@ export function createGame(socket: Socket, username: string, color: string) {
     });
 
     function gameLoop() {
-        if (context) {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            Object.values(players).forEach((player) => {
-                player.draw(context);
-            });
-
-            shots.forEach((shot) => {
-                context.fillStyle = shot.color;
-                context.beginPath();
-                context.arc(shot.x, shot.y, 5, 0, Math.PI * 2);
-                context.fill();
-            });
-
-            walls.forEach((wall) => {
-                context.fillStyle = '#000000';
-                context.fillRect(wall.x, wall.y, wall.width, wall.height);
-            });
-        }
-
+        board.drawBoard(Object.values(players), walls, shots);
         requestAnimationFrame(gameLoop);
     }
 
     let lastShotTime = 0;
     const shotCooldownMilliseconds = 500;
-    canvas.addEventListener('mousedown', (event) => {
+    board.getCanvas().addEventListener('mousedown', (event) => {
         if (event.button === 0) {
             const currentTime = Date.now();
             if (currentTime - lastShotTime >= shotCooldownMilliseconds) {
-                const rect = canvas.getBoundingClientRect();
+                const rect = board.getCanvas().getBoundingClientRect();
                 const clickX = event.clientX - rect.left;
                 const clickY = event.clientY - rect.top;
                 const playerId = socket.id;

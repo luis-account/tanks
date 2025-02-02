@@ -5,8 +5,6 @@ import cors from 'cors';
 import Player from './entity/player';
 import { Direction, Shot } from './types';
 import { calculateNewPosition } from './movement';
-import { hasSubscribers } from 'diagnostics_channel';
-import { SourceTextModule } from 'vm';
 
 const app = express();
 app.use(cors({ origin: '*' }));
