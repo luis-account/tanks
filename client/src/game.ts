@@ -5,18 +5,17 @@ import { Socket } from 'socket.io-client';
 import { UserInteractionListener } from './UserInteractionListener';
 
 export function createGame(socket: Socket, username: string, color: string) {
-    const userInteractionListener = new UserInteractionListener(movementEmitter);
     const board = new Board(document.getElementById('content')!);
+    const userInteractionListener = new UserInteractionListener(movementEmitter, shotEmitter, board.getCanvas());
+    
     const players: { [id: string]: Player } = {};
 
     let shots: Shot[] = [];
     let walls: Wall[] = [];
 
     document.getElementById('revive')?.addEventListener('click', () => {
-        const reviveButton = document.getElementById('revive');
-        if (reviveButton) {
-            reviveButton.style.display = 'none';
-        }
+        const reviveButton = document.getElementById('revive')!;
+        reviveButton.style.display = 'none';
         socket.emit('registerPlayer', { username: username, color: color });
     });
 
@@ -71,9 +70,7 @@ export function createGame(socket: Socket, username: string, color: string) {
         refreshPlayerList(players);
     });
 
-    socket.on('walls', (serverWalls: { x: number, y: number, width: number, height: number }[]) => {
-        walls = serverWalls;
-    });
+    socket.on('walls', (serverWalls: Wall[]) => walls = serverWalls);
 
     socket.on('playerMoved', (playerData: PlayerData) => {
         if (players[playerData.id]) {
@@ -107,37 +104,24 @@ export function createGame(socket: Socket, username: string, color: string) {
         requestAnimationFrame(gameLoop);
     }
 
-    let lastShotTime = 0;
-    const shotCooldownMilliseconds = 500;
-    board.getCanvas().addEventListener('mousedown', (event) => {
-        if (event.button === 0) {
-            const currentTime = Date.now();
-            if (currentTime - lastShotTime >= shotCooldownMilliseconds) {
-                const rect = board.getCanvas().getBoundingClientRect();
-                const clickX = event.clientX - rect.left;
-                const clickY = event.clientY - rect.top;
-                const playerId = socket.id;
-                if (!playerId) return;
-                const player = players[playerId];
-
-                if (!player) return;
-
-                const dx = clickX - player.x;
-                const dy = clickY - player.y;
-                const length = Math.sqrt(dx * dx + dy * dy);
-
-                socket.emit('shoot', {
-                    x: (dx / length),
-                    y: (dy / length)
-                });
-
-                lastShotTime = currentTime;
-            }
-        }
-    });
-
     function movementEmitter(direction: Direction) {
         socket.emit('playerMovement', { direction});
+    }
+
+    function shotEmitter(clickPosition: {x: number, y: number}) {
+        const playerId = socket.id;
+        if (!playerId) return;
+        const player = players[playerId];
+        if (!player) return;
+
+        const dx = clickPosition.x - player.x;
+        const dy = clickPosition.y - player.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+
+        socket.emit('shoot', {
+            x: (dx / length),
+            y: (dy / length)
+        });
     }
 
     gameLoop();

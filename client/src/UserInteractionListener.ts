@@ -7,11 +7,18 @@ export class UserInteractionListener {
     private movementInterval: NodeJS.Timeout | null = null;
 
     private userMovedCallback;
-    private lastInputTime;
+    private userShotCallback;
+    private lastKeyboardInputTime;
+    private lastMouseClickTime;
+    private canvas;
 
-    constructor(userMovedCallback: (direction: Direction) => void) {
+    constructor(userMovedCallback: (direction: Direction) => void, userShotCallback: (clickPosition: {x: number, y: number}) => void, canvas: HTMLCanvasElement) {
         this.userMovedCallback = userMovedCallback;
-        this.lastInputTime = 0;
+        this.userShotCallback = userShotCallback;
+        // TODO: find a better way to handle the mouse clicks on canvas
+        this.canvas = canvas;
+        this.lastKeyboardInputTime = 0;
+        this.lastMouseClickTime = 0;
 
         this.registerEventListeners();
     }
@@ -60,6 +67,22 @@ export class UserInteractionListener {
         }
     }
 
+    onMousedownOnCanvas(event: MouseEvent) {
+        const shotCooldownMilliseconds = 500;
+
+        if (event.button === 0) {
+            const currentTime = Date.now();
+            if (currentTime - this.lastMouseClickTime >= shotCooldownMilliseconds) {
+                const rect = this.canvas.getBoundingClientRect();
+                const clickX = event.clientX - rect.left;
+                const clickY = event.clientY - rect.top;
+
+                this.userShotCallback({x: clickX, y: clickY});
+                this.lastMouseClickTime = currentTime;
+            }
+        }
+    }
+
     private debouncedUserMovedCallback(direction: Direction) {
         const inputCooldownMilliseconds = 50;
 
@@ -69,8 +92,8 @@ export class UserInteractionListener {
 
         this.movementInterval = setInterval(() => {
             const currentTime = Date.now();
-            if (currentTime - this.lastInputTime >= inputCooldownMilliseconds) {
-                this.lastInputTime = currentTime;
+            if (currentTime - this.lastKeyboardInputTime >= inputCooldownMilliseconds) {
+                this.lastKeyboardInputTime = currentTime;
                 this.userMovedCallback(direction);
             }
         }, inputCooldownMilliseconds);
@@ -79,5 +102,7 @@ export class UserInteractionListener {
     private registerEventListeners() {
         window.addEventListener('keydown', (event) => this.onKeydown(event.key as KnownKeyboardInputs));
         window.addEventListener('keyup', (event) => this.onKeyup(event.key));
+
+        this.canvas.addEventListener('mousedown', (event) => this.onMousedownOnCanvas(event));
     }
 }
