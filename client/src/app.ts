@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import { createGame } from "./game";
+import { Game } from "./game";
 
 let socket: Socket;
 
@@ -37,11 +37,9 @@ function preloadLocalstorage() {
 }
 
 function startGame(username: string, color: string) {
-    console.log("Game has started.");
-
     const socketUrl = 'http://localhost:3000';
     socket = io(socketUrl);
-    createGame(socket, username, color);
+    const game = new Game(socket, username, color);
 }
 
 main();

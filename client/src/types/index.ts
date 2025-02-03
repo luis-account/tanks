@@ -18,6 +18,13 @@ export interface Shot {
     color: string;
 }
 
+export interface ShotDto {
+    uuid: string;
+    id: string;
+    x: number;
+    y: number;
+}
+
 export interface Wall {
     x: number;
     y: number;

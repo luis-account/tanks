@@ -5,7 +5,7 @@ class Player {
     size: number;
     color: string;
 
-    constructor(username: string, x: number, y: number, color: string = '#000000', size: number = 20) {
+    constructor(username: string, x: number, y: number, color: string = '#0000FF', size: number = 20) {
         this.username = username;
         this.x = x;
         this.y = y;
@@ -13,22 +13,9 @@ class Player {
         this.color = color;
     }
 
-    move(dx: number, dy: number) {
-        this.x += dx;
-        this.y += dy;
-    }
-
-    update() {
-        // Any logic to update the player's state can go here
-    }
-
-    draw(context: CanvasRenderingContext2D) {
-        context.fillStyle = this.color;
-        context.fillRect(this.x, this.y, this.size, this.size);
-    }
-
-    destroy(context: CanvasRenderingContext2D) {
-        context.clearRect(this.x, this.y, this.size, this.size);
+    updatePosition(x: number, y: number) {
+        this.x = x;
+        this.y = y;
     }
 }
 
