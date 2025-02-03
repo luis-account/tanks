@@ -5,7 +5,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 test('onKeydown should send corresponding direction', async () => {
     const mockCallback = vi.fn();
-    const listener = new UserInteractionListener(mockCallback);
+    const listener = new UserInteractionListener(mockCallback, () => {}, new HTMLCanvasElement());
     
     listener.onKeydown('ArrowUp');
     await sleep(50);
@@ -19,7 +19,7 @@ test('onKeydown should send corresponding direction', async () => {
 
 test('onKeydown should only send only one event when multiple button pressed quickly', async () => {
     const mockCallback = vi.fn();
-    const listener = new UserInteractionListener(mockCallback);
+    const listener = new UserInteractionListener(mockCallback, () => {}, new HTMLCanvasElement());
 
     listener.onKeydown('ArrowUp');
     listener.onKeydown('ArrowLeft');
@@ -32,7 +32,7 @@ test('onKeydown should only send only one event when multiple button pressed qui
 
 test('onKeydown should continue in same direction until key released', async () => {
     const mockCallback = vi.fn();
-    const listener = new UserInteractionListener(mockCallback);
+    const listener = new UserInteractionListener(mockCallback, () => {}, new HTMLCanvasElement());
 
     listener.onKeydown('ArrowUp');
     await sleep(175);
@@ -44,7 +44,7 @@ test('onKeydown should continue in same direction until key released', async () 
 
 test('onKeydown quickrelease of button should not trigger movement', async () => {
     const mockCallback = vi.fn();
-    const listener = new UserInteractionListener(mockCallback);
+    const listener = new UserInteractionListener(mockCallback, () => {}, new HTMLCanvasElement());
 
     listener.onKeydown('ArrowUp');
     listener.onKeyup('ArrowUp');
