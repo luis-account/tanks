@@ -1,14 +1,16 @@
 import { Board } from './board';
 import Player from './player';
-import { Direction, PlayerData, Shot } from './types';
+import { Direction, PlayerData, Shot, Wall } from './types';
 import { Socket } from 'socket.io-client';
+import { UserInteractionListener } from './UserInteractionListener';
 
 export function createGame(socket: Socket, username: string, color: string) {
+    const userInteractionListener = new UserInteractionListener(movementEmitter);
     const board = new Board(document.getElementById('content')!);
-
     const players: { [id: string]: Player } = {};
+
     let shots: Shot[] = [];
-    let walls: { x: number, y: number, width: number, height: number }[] = [];
+    let walls: Wall[] = [];
 
     document.getElementById('revive')?.addEventListener('click', () => {
         const reviveButton = document.getElementById('revive');
@@ -101,6 +103,7 @@ export function createGame(socket: Socket, username: string, color: string) {
 
     function gameLoop() {
         board.drawBoard(Object.values(players), walls, shots);
+
         requestAnimationFrame(gameLoop);
     }
 
@@ -133,76 +136,9 @@ export function createGame(socket: Socket, username: string, color: string) {
         }
     });
 
-
-    let currentDirection: Direction | null = null;
-    let lastInputTime = 0;
-    const inputCooldownMilliseconds = 100;
-    let movementInterval: NodeJS.Timeout | null = null;
-
-    const startMovement = (direction: Direction) => {
-        if (movementInterval) {
-            clearInterval(movementInterval);
-        }
-        movementInterval = setInterval(() => {
-            const currentTime = Date.now();
-            if (currentTime - lastInputTime >= inputCooldownMilliseconds) {
-                socket.emit('playerMovement', { direction });
-                lastInputTime = currentTime;
-            }
-        }, inputCooldownMilliseconds);
-    };
-
-    window.addEventListener('keydown', (event) => {
-        switch (event.key) {
-            case 'ArrowUp':
-            case 'w':
-                if (currentDirection !== 'up') {
-                    currentDirection = 'up';
-                    startMovement('up');
-                }
-                break;
-            case 'ArrowDown':
-            case 's':
-                if (currentDirection !== 'down') {
-                    currentDirection = 'down';
-                    startMovement('down');
-                }
-                break;
-            case 'ArrowLeft':
-            case 'a':
-                if (currentDirection !== 'left') {
-                    currentDirection = 'left';
-                    startMovement('left');
-                }
-                break;
-            case 'ArrowRight':
-            case 'd':
-                if (currentDirection !== 'right') {
-                    currentDirection = 'right';
-                    startMovement('right');
-                }
-                break;
-        }
-    });
-
-    window.addEventListener('keyup', (event) => {
-        switch (event.key) {
-            case 'ArrowUp':
-            case 'w':
-            case 'ArrowDown':
-            case 's':
-            case 'ArrowLeft':
-            case 'a':
-            case 'ArrowRight':
-            case 'd':
-                currentDirection = null;
-                if (movementInterval) {
-                    clearInterval(movementInterval);
-                    movementInterval = null;
-                }
-                break;
-        }
-    });
+    function movementEmitter(direction: Direction) {
+        socket.emit('playerMovement', { direction});
+    }
 
     gameLoop();
 }

@@ -12,6 +12,12 @@ export default defineConfig({
         },
         extensions: ['.ts', '.js'],
     },
+    test: {
+        environment: 'jsdom',
+        testOptions: {
+            files: ['**/*.test.ts'],
+        },
+    },
     build: {
         outDir: 'dist',
     },
