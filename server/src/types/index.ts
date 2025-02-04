@@ -17,7 +17,7 @@ export interface Shot {
     vx: number;
     vy: number;
     id: string;
-    hasBounced: boolean;
+    numberOfBounces: number;
 }
 
 export interface PlayerDto {
