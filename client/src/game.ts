@@ -1,7 +1,7 @@
 import { Board } from './board';
 import Player from './player';
 import { Direction, PlayerData as PlayerDto, Shot, ShotDto, Wall } from './types';
-import { Socket } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import { UserInteractionListener } from './UserInteractionListener';
 import { Hud } from './hud';
 
@@ -15,13 +15,14 @@ export class Game {
     private walls: Wall[] = [];
     private socket: Socket;
 
-    constructor(socket: Socket, username: string, color: string) {
-        this.socket = socket;
+    constructor(socketUrl: string, username: string, color: string) {
+        this.socket = io(socketUrl);;
 
         this.board = new Board(document.getElementById('content')!);
         this.hud = new Hud();
         this.userInteractionListener = new UserInteractionListener(this.movementEmitter.bind(this), this.shotEmitter.bind(this), this.board.getCanvas());
 
+        // TODO: extract this listener
         document.getElementById('revive')?.addEventListener('click', () => {
             this.hud.hideRejoinButton();
             this.socket.emit('registerPlayer', { username: username, color: color });
@@ -41,16 +42,14 @@ export class Game {
     private registerSocketListeners() {
         this.socket.on('walls', (walls: Wall[]) => this.walls = walls);
         this.socket.on('currentPlayers', (playerDtos: PlayerDto[]) => this.players = this.mapPlayerDtoToPlayers(playerDtos));
-        this.socket.on('playerDisconnected', (id: string) => delete this.players[id]);
-        this.socket.on('newPlayer', (playerData: PlayerDto) => this.players[playerData.id] = new Player(playerData.username, playerData.x, playerData.y, playerData.color));
         this.socket.on('playerMoved', (playerDto: PlayerDto) => this.updatePlayerPositionIfPresent(playerDto));
-        this.socket.on('playerHit', (hitData: { hitId: string, shooterId: string }) => this.removeHitPlayerIfPresent(hitData.hitId));
-        this.socket.on('shotsUpdated', (updatedShots: ShotDto[]) => this.shots = this.mapShotDtosToShots(updatedShots));
+        this.socket.on('playerHit', (hitData: { hitId: string }) => this.removeHitPlayerIfPresent(hitData.hitId));
+        this.socket.on('shotsUpdate', (updatedShots: ShotDto[]) => this.shots = this.mapShotDtosToShots(updatedShots));
     }
 
-    private removeHitPlayerIfPresent(hitId: string) {
+    private removeHitPlayerIfPresent(hitId: string) {       
         if (!this.players[hitId]) return;
-        delete this.players[hitId];
+        delete this.players[hitId];      
 
         if (hitId === this.socket.id) {
             this.hud.showRejoinButton();
@@ -62,7 +61,7 @@ export class Game {
         this.players[playerDto.id].updatePosition(playerDto.x, playerDto.y);
     }
 
-    private mapPlayerDtoToPlayers(playerDtos: PlayerDto[]): { [id: string]: Player } {
+    private mapPlayerDtoToPlayers(playerDtos: PlayerDto[]): { [id: string]: Player } {       
         const players: { [id: string]: Player } = {};
         playerDtos.forEach((playerData) => {
             players[playerData.id] = new Player(playerData.username, playerData.x, playerData.y, playerData.color);

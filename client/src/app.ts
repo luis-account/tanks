@@ -17,7 +17,7 @@ function main() {
         const colorInput = document.getElementById('color-input') as HTMLInputElement;
         localStorage.setItem('color', colorInput.value);
 
-        startGame(usernameInput.value, colorInput.value);
+        const game = new Game('http://localhost:3000', usernameInput.value, colorInput.value);
     });
 }
 
@@ -34,12 +34,6 @@ function preloadLocalstorage() {
         const colorInput = document.getElementById('color-input') as HTMLInputElement;
         colorInput.value = color;
     }
-}
-
-function startGame(username: string, color: string) {
-    const socketUrl = 'http://localhost:3000';
-    socket = io(socketUrl);
-    const game = new Game(socket, username, color);
 }
 
 main();

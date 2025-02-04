@@ -19,3 +19,26 @@ export interface Shot {
     id: string;
     hasBounced: boolean;
 }
+
+export interface PlayerDto {
+    id: string;
+    username: string;
+    x: number;
+    y: number;
+    color: string;
+}
+
+export interface Wall {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+export interface NewPlayerDto {
+    id: string;
+    username: string;
+    x: number;
+    y: number;
+    color: string;
+}
