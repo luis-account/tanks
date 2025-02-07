@@ -34,11 +34,3 @@ export interface Wall {
     width: number;
     height: number;
 }
-
-export interface NewPlayerDto {
-    id: string;
-    username: string;
-    x: number;
-    y: number;
-    color: string;
-}

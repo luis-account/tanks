@@ -3,7 +3,7 @@ import http from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 import Player from './entity/player';
-import { Direction, NewPlayerDto, PlayerDto } from './types';
+import { Direction, PlayerDto } from './types';
 import { Game } from './game';
 
 const app = express();
@@ -48,7 +48,7 @@ function mapPlayerMapToDto(playerMap: { [id: string]: Player }): PlayerDto[] {
     }));
 }
 
-function registerNewPlayer(socket: Socket, newPlayerDto: NewPlayerDto): void {
+function registerNewPlayer(socket: Socket, newPlayerDto: PlayerDto): void {
     const players = game.addPlayer(socket.id, newPlayerDto.username, newPlayerDto.color);
     socket.broadcast.emit(
         'currentPlayers',
