@@ -5,7 +5,6 @@ import cors from 'cors';
 import Player from './entity/player';
 import { Direction, NewPlayerDto, PlayerDto } from './types';
 import { Game } from './game';
-import { log } from 'console';
 
 const app = express();
 app.use(cors({ origin: '*' }));
@@ -29,10 +28,10 @@ io.on('connection', (socket) => {
     socket.on('playerMovement', (newMovementDirection: { direction: Direction; }) => playerMoved(socket, newMovementDirection));
     socket.on('shoot', (shootData: { x: number; y: number; }) => shotRegistered(socket, shootData));
     socket.on('disconnect', () => disconnectPlayer(socket));
-
-    const INTERVAL_TIME = 1000 / 500;
-    setInterval(() => updateGameState(INTERVAL_TIME, socket), INTERVAL_TIME);
 });
+
+const INTERVAL_TIME = 1000 / 500;
+setInterval(() => updateGameState(INTERVAL_TIME), INTERVAL_TIME);
 
 function disconnectPlayer(socket: Socket): void {
     game.removePlayer(socket.id);
@@ -63,15 +62,15 @@ function registerNewPlayer(socket: Socket, newPlayerDto: NewPlayerDto): void {
     );
 }
 
-function updateGameState(INTERVAL_TIME: number, socket: Socket): void {
+function updateGameState(INTERVAL_TIME: number): void {
     const newGameState = game.updateGameState(INTERVAL_TIME);
 
     for (const playerId of newGameState.hitPlayerIds) {
-        socket.broadcast.emit('playerHit', { hitId: playerId });
+        io.emit('playerHit', { hitId: playerId });
     }
 
-    socket.broadcast.emit('shotsUpdate', newGameState.shots.map(shot => ({ uuid: shot.uuid, x: shot.x, y: shot.y, id: shot.id })))
-    socket.broadcast.emit('currentPlayers', mapPlayerMapToDto(newGameState.players));
+    io.emit('shotsUpdate', newGameState.shots.map(shot => ({ uuid: shot.uuid, x: shot.x, y: shot.y, id: shot.id })))
+    io.emit('currentPlayers', mapPlayerMapToDto(newGameState.players));
 }
 
 function shotRegistered(socket: Socket, shotPosition: { x: number; y: number; }): void {
