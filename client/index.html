@@ -6,10 +6,14 @@
     <link rel="stylesheet" href="./styles.css">
     <title>Tanks</title>
 </head>
-<body class="m-0 p-0 w-screen h-screen overflow-hidden flex-col justify-center items-center font-sans">
+<body class="m-0 p-0 w-screen h-screen overflow-hidden flex flex-col justify-center items-center font-sans">
+    <div class="absolute w-full max-w-bluevoid left-1/2 pt-4 top-0 -translate-x-1/2">
+        <a href="https://bluevoid.ch" class="font-bold left=0">bluevoid</a>
+    </div>
     <div id="content">
-        <div class="min-w-full flex flex-row justify-between">
-            <div id="player-form" class="mb-3 flex flex-row">
+        <div class="min-w-full flex flex-col items-center justify-between">
+            <h1 class="text-2xl">Tanks Minigame</h1>
+            <div id="player-form" class="mt-8 mb-3 flex flex-row">
                 <input id="username-input" type="text" name="username" placeholder="Username" class="mr-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                 <input id="color-input" type="color" class="mr-2 p-1 h-10 w-14 block bg-white border border-gray-200 cursor-pointer rounded disabled:opacity-50 disabled:pointer-events-none" value="#2563eb" title="Choose your color">
                 <button id="player-submit" type="submit" class="bg-gray-50 hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-300 cursor-pointer rounded-lg">Join</button>
@@ -20,7 +24,7 @@
             <button id="revive" class="bg-red-50 hover:bg-red-100 text-red-800 font-semibold mb-2 py-2 px-4 border border-red-300 cursor-pointer rounded-lg hidden">REVIVE ME JETT</button>
         </div>
     </div>
-    <span class="absolute bottom-0 right-0 m-2 text-xs text-gray-400">alpha 0.3.0</span>
+    <span class="absolute bottom-0 right-0 m-2 text-xs text-gray-400">alpha 0.4.0</span>
     <script type="module" src="src/app.ts"></script>
 </body>
 </html>

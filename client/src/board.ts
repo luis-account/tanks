@@ -6,14 +6,14 @@ export class Board {
     public static CANVAS_HEIGHT = 700;
 
     private static WALL_COLOR = '#000000';
-    
+
     private context: CanvasRenderingContext2D;
     private canvas: HTMLCanvasElement;
 
     constructor(parentElement: HTMLElement) {
         this.canvas = document.createElement('canvas');
         this.canvas.width = Board.CANVAS_WIDTH;
-        this.canvas.height = Board.CANVAS_HEIGHT; 
+        this.canvas.height = Board.CANVAS_HEIGHT;
 
         const possiblyNullContext = this.canvas.getContext('2d');
         if (!possiblyNullContext) {
@@ -48,7 +48,9 @@ export class Board {
 
     public drawBoard(players: Player[], walls: Wall[], shots: Shot[]) {
         this.context.clearRect(0, 0, Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT);
-        
+        this.context.fillStyle = "#FFFFFF";
+        this.context.fillRect(0, 0, Board.CANVAS_WIDTH, Board.CANVAS_HEIGHT);
+
         this.drawPlayers(players);
         this.drawWalls(walls);
         this.drawShots(shots);
